@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Load pretrained SSD MobileNet model
+# Load pretrained model
 model = hub.load(
     "https://tfhub.dev/tensorflow/ssd_mobilenet_v2/2"
 )
@@ -28,5 +28,71 @@ input_tensor = input_tensor[tf.newaxis, ...]
 # Run inference
 detections = model(input_tensor)
 
-# Print output keys
-print(detections.keys())
+# Extract outputs
+boxes = detections["detection_boxes"][0].numpy()
+scores = detections["detection_scores"][0].numpy()
+classes = detections["detection_classes"][0].numpy().astype(int)
+
+# Image dimensions
+height, width, _ = image_rgb.shape
+
+# Confidence threshold
+threshold = 0.5
+
+labels = {
+    1: "person",
+    44: "bottle",
+    47: "cup",
+    62: "chair",
+    64: "potted plant",
+    67: "cell phone",
+    77: "teddy bear",
+    84: "book",
+    86: "vase"
+}
+
+# Draw detections
+for i in range(len(scores)):
+
+    if scores[i] > threshold:
+
+        ymin, xmin, ymax, xmax = boxes[i]
+
+        # Convert normalized coordinates to image coordinates
+        left = int(xmin * width)
+        right = int(xmax * width)
+        top = int(ymin * height)
+        bottom = int(ymax * height)
+
+        # Draw rectangle
+        cv2.rectangle(
+            image_rgb,
+            (left, top),
+            (right, bottom),
+            (0, 255, 0),
+            2
+        )
+
+        # Label text
+    class_id = classes[i]
+
+class_name = labels.get(class_id, "Unknown")
+
+label = f"{class_name}: {scores[i]:.2f}"
+
+        # Put label above box
+cv2.putText(
+            image_rgb,
+            label,
+            (left, top - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255, 0, 0),
+            2
+        )
+
+# Display image
+plt.figure(figsize=(12, 8))
+plt.imshow(image_rgb)
+plt.axis("off")
+plt.show()
