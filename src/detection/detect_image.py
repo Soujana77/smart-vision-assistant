@@ -3,6 +3,7 @@ import tensorflow_hub as hub
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import pyttsx3
 
 # Load pretrained model
 model = hub.load(
@@ -11,10 +12,24 @@ model = hub.load(
 
 print("Model loaded successfully!")
 
+# Initialize text-to-speech engine
+engine = pyttsx3.init()
+
+# Set speech speed
+engine.setProperty("rate", 150)
+
+# Remember last spoken object
+last_announced = ""
+
 # Load image
 image_path = "data/images/test.png"
 
 image = cv2.imread(image_path)
+
+# Check if image loaded correctly
+if image is None:
+    print("Error: Image not found!")
+    exit()
 
 # Convert BGR to RGB
 image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -39,6 +54,7 @@ height, width, _ = image_rgb.shape
 # Confidence threshold
 threshold = 0.5
 
+# COCO labels
 labels = {
     1: "person",
     44: "bottle",
@@ -64,7 +80,7 @@ for i in range(len(scores)):
         top = int(ymin * height)
         bottom = int(ymax * height)
 
-        # Draw rectangle
+        # Draw bounding box
         cv2.rectangle(
             image_rgb,
             (left, top),
@@ -73,15 +89,15 @@ for i in range(len(scores)):
             2
         )
 
-        # Label text
-    class_id = classes[i]
+        # Get class label
+        class_id = classes[i]
+        class_name = labels.get(class_id, "Unknown")
 
-class_name = labels.get(class_id, "Unknown")
+        # Create label text
+        label = f"{class_name}: {scores[i]:.2f}"
 
-label = f"{class_name}: {scores[i]:.2f}"
-
-        # Put label above box
-cv2.putText(
+        # Draw label
+        cv2.putText(
             image_rgb,
             label,
             (left, top - 10),
@@ -90,6 +106,21 @@ cv2.putText(
             (255, 0, 0),
             2
         )
+
+        # Speak detected object
+        if class_name != "Unknown":
+
+            if class_name != last_announced:
+
+                speech = f"{class_name} detected"
+
+                print(speech)
+
+                engine.say(speech)
+
+                engine.runAndWait()
+
+                last_announced = class_name
 
 # Display image
 plt.figure(figsize=(12, 8))
