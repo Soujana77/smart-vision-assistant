@@ -47,6 +47,17 @@ labels = {
     86: "vase"
 }
 
+# Important navigation obstacles
+important_objects = [
+    "person",
+    "chair",
+    "car",
+    "truck",
+    "bus",
+    "motorcycle",
+    "bicycle"
+]
+
 # Open webcam
 cap = cv2.VideoCapture(0)
 
@@ -85,7 +96,7 @@ while True:
     scores = detections["detection_scores"][0].numpy()
     classes = detections["detection_classes"][0].numpy().astype(int)
 
-    # Frame dimensions
+    # Get frame dimensions
     height, width, _ = frame.shape
 
     # Loop through detections
@@ -104,7 +115,7 @@ while True:
             # Calculate object center
             object_center = (left + right) // 2
 
-            # Determine object direction
+            # Determine direction
             if object_center < width // 3:
                 direction = "on the left"
 
@@ -113,6 +124,19 @@ while True:
 
             else:
                 direction = "on the right"
+
+            # Calculate object area
+            box_area = (right - left) * (bottom - top)
+
+            # Estimate distance
+            if box_area > 150000:
+                distance = "very close"
+
+            elif box_area > 70000:
+                distance = "close"
+
+            else:
+                distance = "far"
 
             # Draw bounding box
             cv2.rectangle(
@@ -128,7 +152,7 @@ while True:
             class_name = labels.get(class_id, "Unknown")
 
             # Create label
-            label = f"{class_name} {direction}: {scores[i]:.2f}"
+            label = f"{class_name} {direction} ({distance})"
 
             # Draw label
             cv2.putText(
@@ -141,12 +165,12 @@ while True:
                 2
             )
 
-            # Voice announcement
-            if class_name != "Unknown":
+            # Voice assistance for important objects
+            if class_name in important_objects:
 
                 if class_name != last_announced:
 
-                    speech = f"{class_name} {direction}"
+                    speech = f"{class_name} {direction} and {distance}"
 
                     print(speech)
 
@@ -177,7 +201,7 @@ while True:
     # Show webcam feed
     cv2.imshow("Smart Vision Assistant", frame)
 
-    # Exit on q key
+    # Exit when q is pressed
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
