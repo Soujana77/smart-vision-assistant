@@ -15,7 +15,7 @@ print("Model loaded successfully!")
 # Initialize text-to-speech engine
 engine = pyttsx3.init()
 
-# Speech speed
+# Set speech speed
 engine.setProperty("rate", 150)
 
 # COCO labels
@@ -47,7 +47,7 @@ labels = {
     86: "vase"
 }
 
-# Important navigation obstacles
+# Important navigation objects
 important_objects = [
     "person",
     "chair",
@@ -67,8 +67,12 @@ threshold = 0.7
 # FPS tracking
 prev_time = 0
 
-# Store last announced object
+# Voice announcement tracking
 last_announced = ""
+last_announcement_time = 0
+
+# Cooldown time in seconds
+announcement_cooldown = 3
 
 while True:
 
@@ -151,7 +155,7 @@ while True:
             class_id = classes[i]
             class_name = labels.get(class_id, "Unknown")
 
-            # Create label
+            # Create display label
             label = f"{class_name} {direction} ({distance})"
 
             # Draw label
@@ -165,10 +169,16 @@ while True:
                 2
             )
 
-            # Voice assistance for important objects
+            # Current time for cooldown logic
+            current_time = time.time()
+
+            # Voice assistance
             if class_name in important_objects:
 
-                if class_name != last_announced:
+                if (
+                    class_name != last_announced
+                    or current_time - last_announcement_time > announcement_cooldown
+                ):
 
                     speech = f"{class_name} {direction} and {distance}"
 
@@ -179,6 +189,8 @@ while True:
                     engine.runAndWait()
 
                     last_announced = class_name
+
+                    last_announcement_time = current_time
 
     # FPS calculation
     current_time = time.time()
