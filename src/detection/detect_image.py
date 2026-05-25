@@ -15,7 +15,7 @@ print("Model loaded successfully!")
 # Initialize text-to-speech engine
 engine = pyttsx3.init()
 
-# Set speech speed
+# Speech speed
 engine.setProperty("rate", 150)
 
 # COCO labels
@@ -47,7 +47,7 @@ labels = {
     86: "vase"
 }
 
-# Important navigation objects
+# Important navigation obstacles
 important_objects = [
     "person",
     "chair",
@@ -67,9 +67,12 @@ threshold = 0.7
 # FPS tracking
 prev_time = 0
 
-# Voice announcement tracking
+# Voice memory
 last_announced = ""
 last_announcement_time = 0
+
+# Guidance memory
+last_guidance = ""
 
 # Cooldown time in seconds
 announcement_cooldown = 3
@@ -82,6 +85,9 @@ while True:
     if not ret:
         print("Failed to capture frame")
         break
+
+    # Reset path state
+    path_blocked = False
 
     # Convert BGR to RGB
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -100,7 +106,7 @@ while True:
     scores = detections["detection_scores"][0].numpy()
     classes = detections["detection_classes"][0].numpy().astype(int)
 
-    # Get frame dimensions
+    # Frame dimensions
     height, width, _ = frame.shape
 
     # Loop through detections
@@ -169,7 +175,16 @@ while True:
                 2
             )
 
-            # Current time for cooldown logic
+            # Check for dangerous obstacle
+            if (
+                class_name in important_objects
+                and direction == "ahead"
+                and distance in ["close", "very close"]
+            ):
+
+                path_blocked = True
+
+            # Current time
             current_time = time.time()
 
             # Voice assistance
@@ -192,6 +207,35 @@ while True:
 
                     last_announcement_time = current_time
 
+    # Navigation guidance
+    if path_blocked:
+
+        guidance = "Obstacle ahead. Move carefully."
+
+    else:
+
+        guidance = "Path appears clear."
+
+    # Display guidance
+    cv2.putText(
+        frame,
+        guidance,
+        (20, height - 20),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1,
+        (255, 255, 0),
+        3
+    )
+
+    # Speak guidance only when changed
+    if guidance != last_guidance:
+
+        engine.say(guidance)
+
+        engine.runAndWait()
+
+        last_guidance = guidance
+
     # FPS calculation
     current_time = time.time()
 
@@ -213,7 +257,7 @@ while True:
     # Show webcam feed
     cv2.imshow("Smart Vision Assistant", frame)
 
-    # Exit when q is pressed
+    # Exit on q key
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
