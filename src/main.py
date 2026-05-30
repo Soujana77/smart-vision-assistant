@@ -1,7 +1,7 @@
 import cv2
 import time
 
-from detection.detector import detect_objects
+from detection.yolo_detector import detect_objects
 from ocr.ocr_reader import read_text
 from navigation.navigator import analyze_path
 from voice.speaker import speak
@@ -25,23 +25,24 @@ while True:
     if not ret:
         break
 
-    # ---------------------------
+    # ===========================
     # Object Detection
-    # ---------------------------
+    # ===========================
 
     detections = detect_objects(frame)
 
-    # Draw detections
     for detection in detections:
 
         left, top, right, bottom = detection["box"]
 
         label = (
             f"{detection['class_name']} "
+            f"{detection['score']:.2f} "
             f"{detection['direction']} "
             f"({detection['distance']})"
         )
 
+        # Draw bounding box
         cv2.rectangle(
             frame,
             (left, top),
@@ -50,6 +51,7 @@ while True:
             2
         )
 
+        # Draw label
         cv2.putText(
             frame,
             label,
@@ -60,9 +62,9 @@ while True:
             2
         )
 
-    # ---------------------------
+    # ===========================
     # Navigation Analysis
-    # ---------------------------
+    # ===========================
 
     guidance = analyze_path(detections)
 
@@ -76,9 +78,9 @@ while True:
         2
     )
 
-    # ---------------------------
+    # ===========================
     # OCR
-    # ---------------------------
+    # ===========================
 
     text = read_text(frame)
 
@@ -94,9 +96,9 @@ while True:
             2
         )
 
-    # ---------------------------
+    # ===========================
     # Voice Logic
-    # ---------------------------
+    # ===========================
 
     current_time = time.time()
 
@@ -112,9 +114,9 @@ while True:
 
         last_spoken_time = current_time
 
-    # ---------------------------
+    # ===========================
     # Display
-    # ---------------------------
+    # ===========================
 
     cv2.imshow(
         "Smart Vision Assistant",
