@@ -68,6 +68,8 @@ while True:
 
     guidance = analyze_path(detections)
 
+    current_time = time.time()
+
     cv2.putText(
         frame,
         guidance,
