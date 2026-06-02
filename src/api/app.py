@@ -7,6 +7,8 @@ import numpy as np
 
 from src.detection.yolo_detector import detect_objects
 from src.ocr.ocr_reader import read_text
+from src.navigation.navigator import analyze_path
+
 app = FastAPI(
     title="Smart Vision Assistant API",
     version="1.0"
@@ -59,4 +61,28 @@ async def ocr(file: UploadFile = File(...)):
 
     return {
         "text": extracted_text
+    }
+
+@app.post("/navigation")
+async def navigation(file: UploadFile = File(...)):
+
+    contents = await file.read()
+
+    image_array = np.frombuffer(
+        contents,
+        np.uint8
+    )
+
+    frame = cv2.imdecode(
+        image_array,
+        cv2.IMREAD_COLOR
+    )
+
+    detections = detect_objects(frame)
+
+    guidance = analyze_path(detections)
+
+    return {
+        "guidance": guidance,
+        "detections": detections
     }
