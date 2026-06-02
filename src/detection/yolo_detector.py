@@ -24,7 +24,7 @@ def detect_objects(frame):
             confidence = float(box.conf[0])
 
             # Lower threshold to detect more objects
-            if confidence < 0.3:
+            if confidence < 0.5:
                 continue
 
             class_id = int(box.cls[0])
