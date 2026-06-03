@@ -14,9 +14,13 @@ function App() {
 
   const [guidance, setGuidance] = useState("");
 
+  const [loading, setLoading] = useState(false);
+
   const handleFileChange = (event) => {
 
     const selectedFile = event.target.files[0];
+
+    if (!selectedFile) return;
 
     setFile(selectedFile);
 
@@ -27,35 +31,77 @@ function App() {
 
   const analyzeImage = async () => {
 
-  if (!file) {
-    alert("Please select an image");
-    return;
-  }
+    if (!file) {
 
-  const formData = new FormData();
-  formData.append("file", file);
+      alert("Please select an image");
 
-  try {
+      return;
+    }
 
-    const detectResponse =
-      await axios.post(
-        "http://127.0.0.1:8000/detect",
-        formData
+    setLoading(true);
+
+    try {
+
+      // DETECT OBJECTS
+      const detectFormData = new FormData();
+
+      detectFormData.append("file", file);
+
+      const detectResponse =
+        await axios.post(
+          "http://127.0.0.1:8000/detect",
+          detectFormData
+        );
+
+      setDetections(
+        detectResponse.data.detections
       );
 
-    console.log(detectResponse.data);
+      // OCR
+      const ocrFormData = new FormData();
 
-    setDetections(
-      detectResponse.data.detections
-    );
+      ocrFormData.append("file", file);
 
-  } catch (error) {
+      const ocrResponse =
+        await axios.post(
+          "http://127.0.0.1:8000/ocr",
+          ocrFormData
+        );
 
-    console.error(error);
+      setOcrText(
+        ocrResponse.data.text
+      );
 
-    alert("Backend connection failed");
-  }
-};
+      // NAVIGATION
+      const navigationFormData =
+        new FormData();
+
+      navigationFormData.append(
+        "file",
+        file
+      );
+
+      const navigationResponse =
+        await axios.post(
+          "http://127.0.0.1:8000/navigation",
+          navigationFormData
+        );
+
+      setGuidance(
+        navigationResponse.data.guidance
+      );
+
+      setLoading(false);
+
+    } catch (error) {
+
+      console.error(error);
+
+      setLoading(false);
+
+      alert("Backend connection failed");
+    }
+  };
 
   return (
 
@@ -64,7 +110,8 @@ function App() {
       <h1>Smart Vision Assistant</h1>
 
       <p className="subtitle">
-        AI-Powered Navigation Assistant for Visually Impaired Users
+        AI-Powered Navigation Assistant for
+        Visually Impaired Users
       </p>
 
       <div className="upload-section">
@@ -74,8 +121,15 @@ function App() {
           onChange={handleFileChange}
         />
 
-        <button onClick={analyzeImage}>
-          Analyze
+        <button
+          onClick={analyzeImage}
+          disabled={loading}
+        >
+          {
+            loading
+              ? "Analyzing..."
+              : "Analyze"
+          }
         </button>
 
       </div>
@@ -91,37 +145,81 @@ function App() {
           />
 
         </div>
+
       )}
 
       <div className="results-container">
 
         <div className="card">
 
-          <h2>Detected Objects</h2>
+          <h2>
+            Detected Objects
+            {
+              detections.length > 0 &&
+              ` (${detections.length})`
+            }
+          </h2>
 
-          {detections.length > 0 ? (
+          {
+            detections.length > 0
+              ? (
+                <ul>
 
-            <ul>
+                  {
+                    detections.map(
+                      (
+                        item,
+                        index
+                      ) => (
 
-              {detections.map(
-                (item, index) => (
+                        <li key={index}>
 
-                  <li key={index}>
+                          <strong>
+                            {
+                              item.class_name
+                            }
+                          </strong>
 
-                    {item.class_name}
-                    {" "}
-                    ({item.score})
+                          <br />
 
-                  </li>
-                )
-              )}
+                          Direction:
+                          {" "}
+                          {
+                            item.direction
+                          }
 
-            </ul>
+                          <br />
 
-          ) : (
+                          Distance:
+                          {" "}
+                          {
+                            item.distance
+                          }
 
-            <p>No detections yet.</p>
-          )}
+                          <br />
+
+                          Confidence:
+                          {" "}
+                          {
+                            (
+                              item.score * 100
+                            ).toFixed(0)
+                          }
+                          %
+
+                        </li>
+                      )
+                    )
+                  }
+
+                </ul>
+              )
+              : (
+                <p>
+                  No detections yet.
+                </p>
+              )
+          }
 
         </div>
 
@@ -130,17 +228,27 @@ function App() {
           <h2>OCR Text</h2>
 
           <p>
-            {ocrText || "No text extracted yet."}
+            {
+              ocrText
+                ? ocrText
+                : "No text detected."
+            }
           </p>
 
         </div>
 
         <div className="card">
 
-          <h2>Navigation Guidance</h2>
+          <h2>
+            Navigation Guidance
+          </h2>
 
           <p>
-            {guidance || "No guidance available."}
+            {
+              guidance
+                ? guidance
+                : "No guidance available."
+            }
           </p>
 
         </div>
