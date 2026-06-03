@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import "./App.css";
+import CameraFeed from "./components/CameraFeed";
 
 function App() {
 
@@ -15,6 +16,9 @@ function App() {
   const [guidance, setGuidance] = useState("");
 
   const [loading, setLoading] = useState(false);
+
+  const [showCamera, setShowCamera] =
+  useState(false);
 
   const handleFileChange = (event) => {
 
@@ -131,6 +135,17 @@ function App() {
               : "Analyze"
           }
         </button>
+<button
+  onClick={() =>
+    setShowCamera(!showCamera)
+  }
+>
+  {
+    showCamera
+      ? "Stop Camera"
+      : "Start Camera"
+  }
+</button>
 
       </div>
 
@@ -147,6 +162,10 @@ function App() {
         </div>
 
       )}
+      {
+  showCamera &&
+  <CameraFeed />
+}
 
       <div className="results-container">
 

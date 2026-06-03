@@ -144,3 +144,16 @@ button:disabled {
   background: #9ca3af;
   cursor: not-allowed;
 }
+
+.camera-container {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.camera-feed {
+  width: 600px;
+  max-width: 100%;
+  border-radius: 12px;
+  border: 3px solid #16a34a;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
