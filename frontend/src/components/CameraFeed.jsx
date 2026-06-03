@@ -15,6 +15,8 @@ function CameraFeed() {
 
 const [guidance, setGuidance] = useState("");
 
+const [autoAnalyze, setAutoAnalyze] = useState(false);
+
   useEffect(() => {
 
     const startCamera = async () => {
@@ -145,6 +147,36 @@ setGuidance(
     );
   };
 
+useEffect(() => {
+
+  let interval;
+
+  if (autoAnalyze) {
+
+    interval = setInterval(() => {
+
+      if (!loading) {
+
+        analyzeFrame();
+
+      }
+
+    }, 3000);
+
+  }
+
+  return () => {
+
+    if (interval) {
+
+      clearInterval(interval);
+
+    }
+
+  };
+
+}, [autoAnalyze, loading]);
+
   return (
 
     <div className="camera-container">
@@ -207,7 +239,21 @@ setGuidance(
             : "Analyze Current Frame"
         }
       </button>
+<button
+  onClick={() =>
+    setAutoAnalyze(
+      !autoAnalyze
+    )
+  }
+>
 
+  {
+    autoAnalyze
+      ? "Stop Auto Analysis"
+      : "Start Auto Analysis"
+  }
+
+</button>
       <div
         style={{
           marginTop: "20px"

@@ -157,3 +157,7 @@ button:disabled {
   border: 3px solid #16a34a;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
+
+.camera-container button {
+  margin: 10px;
+}
