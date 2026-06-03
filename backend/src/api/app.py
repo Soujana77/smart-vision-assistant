@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi import UploadFile
 from fastapi import File
+from fastapi.middleware.cors import CORSMiddleware
 
 import cv2
 import numpy as np
@@ -12,6 +13,17 @@ from src.navigation.navigator import analyze_path
 app = FastAPI(
     title="Smart Vision Assistant API",
     version="1.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+    "http://localhost:5173",
+    "http://localhost:5174"
+],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.get("/")
