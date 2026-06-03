@@ -11,6 +11,10 @@ function CameraFeed() {
 
   const [loading, setLoading] = useState(false);
 
+  const [ocrText, setOcrText] = useState("");
+
+const [guidance, setGuidance] = useState("");
+
   useEffect(() => {
 
     const startCamera = async () => {
@@ -88,6 +92,43 @@ function CameraFeed() {
             response.data.detections
           );
 
+          const ocrFormData = new FormData();
+
+ocrFormData.append(
+  "file",
+  blob,
+  "frame.jpg"
+);
+
+const ocrResponse =
+  await axios.post(
+    "http://127.0.0.1:8000/ocr",
+    ocrFormData
+  );
+
+setOcrText(
+  ocrResponse.data.text
+);
+
+const navigationFormData =
+  new FormData();
+
+navigationFormData.append(
+  "file",
+  blob,
+  "frame.jpg"
+);
+
+const navigationResponse =
+  await axios.post(
+    "http://127.0.0.1:8000/navigation",
+    navigationFormData
+  );
+
+setGuidance(
+  navigationResponse.data.guidance
+);
+
         } catch (error) {
 
           console.error(error);
@@ -114,7 +155,41 @@ function CameraFeed() {
         playsInline
         className="camera-feed"
       />
+<div
+  style={{
+    marginTop: "20px"
+  }}
+>
 
+  <h3>OCR Text</h3>
+
+  <p>
+    {
+      ocrText
+        ? ocrText
+        : "No text detected."
+    }
+  </p>
+
+</div>
+
+<div
+  style={{
+    marginTop: "20px"
+  }}
+>
+
+  <h3>Navigation Guidance</h3>
+
+  <p>
+    {
+      guidance
+        ? guidance
+        : "No guidance available."
+    }
+  </p>
+
+</div>
       <canvas
         ref={canvasRef}
         style={{ display: "none" }}
